@@ -58,8 +58,8 @@ var server = httpsServer.listen(port, function() {console.log('this should work'
 //                   //
 ///////////////////////
 
-// var users = {};         <- I don't think this is needed with the way
-// var users_online = [];  <- we've set up our models.
+var users = {};        
+var users_online = [];  
 
 var io = require('socket.io').listen(server);
 io.sockets.on('connection', function(socket) {
@@ -108,8 +108,7 @@ io.sockets.on('connection', function(socket) {
     });
 
     socket.on("callAccepted", function(data) {
-        io.to(data.donorSocket).emit("callAccepted", {"chatroomID": data.chatroomID
-                                                     });
+        io.to(data.donorSocket).emit("callAccepted", {"chatroomID": data.chatroomID});
     });
 
     socket.on("callDeclined", function(data) {

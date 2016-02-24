@@ -9,6 +9,7 @@ ballyCyrk.controller('profileController', function(userFactory, friendFactory, $
     userFactory.show($routeParams.id, function(data){
       _this.user = data;
       console.log("YOU: ", data);
+
       socket.emit("login", {id: data._id,
                             username: data.username});
 
@@ -18,6 +19,9 @@ ballyCyrk.controller('profileController', function(userFactory, friendFactory, $
       });
     });
   }
+  // socket.on("users-online", function(data) {
+  //   this.confirmed();
+  // });
 
   userFactory.socket.on("users-online", function(data) {
     $rootScope.$apply(function() {
