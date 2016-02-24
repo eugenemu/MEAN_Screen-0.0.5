@@ -1,5 +1,5 @@
 <div class="page-header text-center">
-  <h1><span class="fa fa-anchor"></span> Profile Page</h1>
+  <h1><span class="fa fa-anchor"></span> Welcome <span ng-bind="_this.user.username"></span></h1>
   <button class="btn btn-danger btn-sm" ng-click="PC.logout()">Logout</button>
 </div>
 <div class="inline2">
@@ -31,7 +31,7 @@
     </thead>
     <tbody>
       <tr ng-repeat="request in PC.requestedFriendship">
-        <td ng-bind="request.his.username.username"></td>
+        <td ng-bind="request.username"></td>
         <td>
           <button class="btn btn-xs btn-success"
                      ng-click="PC.acceptRequest(request)">Yes Please
@@ -69,7 +69,7 @@
     <!-- PENDING FRIEND REQUESTS -->
     <tbody>
       <tr ng-repeat="ask in PC.pendingFriends">
-        <td ng-bind="ask.her.username.username"></td>
+        <td ng-bind="ask.username"></td>
         <td>
           <button class="btn btn-xs btn-warning"
                      ng-click="PC.deleteRequest(ask)">Pending
@@ -89,12 +89,10 @@
       </tr>
     </thead>
     <tbody>
-      <tr ng-repeat="friend in PC.friends" ng-if="!(friend._id == PC.user._id)">
+      <tr ng-repeat="friend in PC.friends">
         <td ng-bind="friend.username"></td>
         <td>
-          <button class="btn btn-xs btn-success"
-                     ng-click="PC.callRequest(friend)">Chat
-          </button>
+          <button class="btn btn-xs btn-success" ng-click="PC.requestCall(PC.users_online[$index])">Chat</button>
         </td>
       </tr>
     </tbody>

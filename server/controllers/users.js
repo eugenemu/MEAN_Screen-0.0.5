@@ -24,9 +24,21 @@ module.exports ={
       if (err) {
         res.json(err);
       } else {
-        console.log(all);
-        res.json(all);
+        var others = []
+        for (var i=0; i < all.length; i++) {
+          if ( all[i]._id != req.params.id){
+            others.push(all[i]);
+          }
+        }
+        res.json(others);
       }
+    });
+  },
+  logout: function(req, res){
+    console.log(req.body._id)
+    User.findOne({_id: req.body._id}, function (err, user){
+      user.online = false;
+      user.save();
     });
   }
 };

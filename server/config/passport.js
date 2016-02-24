@@ -1,4 +1,4 @@
-// load all the things we need
+  // load all the things we need
 var LocalStrategy     = require('passport-local').Strategy;
 var FacebookStrategy  = require('passport-facebook').Strategy;
 var GoogleStrategy    = require('passport-google-oauth').OAuth2Strategy;
@@ -49,19 +49,37 @@ module.exports        = function(passport){
         if (err) { return res(err); }; //in demo they did not add {}.
         // check to see if theres already a user with that email
         if (user) {
-          return res(null, false, req.flash('signupMessage', 'That email is already in use.'));
+          return res(null, false, err);
         } else {
-          // if ther is no user with that email, create the user
-          var newUser = new User();
-          // set the user's local credentials
-          newUser.username = req.body.username;
-          newUser.local.email = req.body.email; // req.body.email?
-          newUser.local.password = newUser.generateHash(password); // req.body.password?
-          newUser.save(function(err) {
-            if (err) {
-              throw (err);
+          User.findOne({email : email}, function(err, user) {
+            if (err) { return res(err); };
+            if (user) {
+              user.username = req.body.username;
+              user.online = true;
+              user.local.email = req.body.email; // req.body.email?
+              user.local.password = user.generateHash(password);
+              user.save(function(err, result) {
+                if (err) {
+                  throw (err);
+                } else {
+                  return res(null, user);
+                }
+              })
             } else {
-              return res(null, newUser);
+              var newUser = new User();
+              // set the user's local credentials
+              newUser.email = req.body.email;
+              newUser.username = req.body.username;
+              newUser.online = true;
+              newUser.local.email = req.body.email; // req.body.email?
+              newUser.local.password = newUser.generateHash(password); // req.body.password?
+              newUser.save(function(err, result) {
+                if (err) {
+                  throw (err);
+                } else {
+                  return res(null, newUser);
+                }
+              });
             }
           });
         }
@@ -83,9 +101,7 @@ module.exports        = function(passport){
   // callback with email and password from our form
   // find a user whose email is the same as the forms email
   //we are checking to se if the user tyring to ogin already exists
-    User.findOne( {'local.email' : email}, function(err, user){
-      console.log('err',err);
-      console.log('user', user);
+    User.findOne( {email : email}, function(err, user){
       //if there are any errors, return those errors before anything else
       if(err)
         return callback(err);
@@ -97,6 +113,8 @@ module.exports        = function(passport){
       if (!user.validPassword(password))
         return callback(null, false, err);
       // all is well return successful user
+      user.online = true;
+      user.save();
       return callback(null, user);
     });
   }));
@@ -122,6 +140,8 @@ module.exports        = function(passport){
           return done(err);
         // if the user is found, then log them in
         if (user) {
+            user.online = true;
+            user.save();
             return done(null, user); // user found, return that user
         } else {
           // if there is no user found with that facebook id, create them
@@ -129,7 +149,7 @@ module.exports        = function(passport){
           // set all of the facebook information in our user model
           newUser.facebook.id    = profile.id; // set the users facebook id
           newUser.facebook.token = token; // we will save the token that facebook provides to the user
-          newUser.facebook.name  = profile.name.displayName; // look at the passport user profile to see how names are returned
+          newUser.facebook.name  = profile.name.givenName; // look at the passport user profile to see how names are returned
           newUser.facebook.email = profile.emails[0].value; // facebook can return multiple emails so we'll take the first
           // save our user to the database
           newUser.save(function(err) {
@@ -155,21 +175,26 @@ module.exports        = function(passport){
     // User.findOne won't fire until we have all our data back from Google
     process.nextTick(function() {
       // try to find the user based on their google id
-      User.findOne({ 'google.id' : profile.id }, function(err, user) {
+      User.findOne({ email : profile.emails[0].value }, function(err, user) {
         if (err)
           return done(err);
         if (user) {
+          user.online = true;
+          user.save();
           return done(null, user);
         } else {
           // if the user isnt in our database, create a new user
           var newUser          = new User();
           // set all of the relevant information
           newUser.google.id    = profile.id;
+          newUser.email        = profile.emails[0].value;
+          newUser.username     = profile.name.givenName;
+          newUser.online       = true;
           newUser.google.token = token;
           newUser.google.name  = profile.displayName;
           newUser.google.email = profile.emails[0].value; // pull the first email
           // save the user
-          newUser.save(function(err) {
+          newUser.save(function(err, user) {
             if (err)
               throw err;
             return done(null, newUser);

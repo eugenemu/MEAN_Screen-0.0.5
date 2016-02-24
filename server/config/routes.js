@@ -1,16 +1,16 @@
 var user                = require('../controllers/users.js');
 var friendship          = require('../controllers/friendships.js');
 
-module.exports = function(app, passport){
-  app.get('/user/:id',      function(req,res) {user.get(req, res)})
-  app.get('/users',         function(req,res) {user.index(req, res)})
-  app.get('/login',         function(req,res) {user.nolog(req, res) })
-  app.post('/request',      function(req,res) {friendship.request(req, res)})
-  app.get('/pending/:id',   function(req,res) {friendship.pending(req, res)})
-  app.get('/requests/:id',  function(req,res) {friendship.requested(req, res)})
-  app.post('/confirm/:id',  function(req,res) {friendship.confirm(req, res)})
-  app.delete('/request/:id',function(req,res) {friendship.delete(req, res )})
-  app.post('/accept',        function(req,res) {friendship.accept(req, res )})
+module.exports = function(app, passport, session){
+  app.get('/user/:id',      user.get)
+  app.get('/users/:id',     user.index)
+  app.get('/login',         user.nolog)
+  app.post('/request',      friendship.request)
+  app.get('/pending/:id',   friendship.pending)
+  app.get('/requests/:id',  friendship.requested)
+  app.post('/confirm/:id',  friendship.confirm)
+  app.post('/delete',       friendship.delete)
+  app.post('/accept',       friendship.accept)
   // show the login form & pass any flash data if it exists
   // res.render('login.ejs', {message: req.flash('loginMessage') });
   app.post('/login',            passport.authenticate('local-login', {
@@ -25,7 +25,6 @@ module.exports = function(app, passport){
     failureRedirect : '/signup' }),
     // function to specifically handle the callback and pass json back
     function(req, res) {
-      console.log('RES', req.user);
       res.json({user: req.user});
   });
 // =====================================
@@ -33,7 +32,7 @@ module.exports = function(app, passport){
 // =====================================
 // route for facebook authentication and login
   app.get('/auth/facebook', passport.authenticate('facebook',
-                                                  { scope : 'email' }));
+                                                  { scope : ['email'] }));
   // handle the callback after facebook has authenticated the user
   app.get('/auth/facebook/callback',
     passport.authenticate('facebook', {
@@ -61,15 +60,17 @@ module.exports = function(app, passport){
 // we will want this protected so you have to be logged in to visit
 // we will use route middleware to verify this (the isLoggedIn function)
   app.get('/profile', isLoggedIn, function(req, res) {
-    res.status({success:true}).json({
-      user: req.user // get the user out of session and pass to template.
-    });
+    console.log("PROFILE IN ROUTES", req.user);
+    res.redirect('/#/profile/'+req.user._id);
   });
+
 
 // =====================================
 // LOGOUT ==============================
 // =====================================
-  app.get('/logout', function(req, res) {
+  app.post('/logout', function(req, res) {
+    console.log("PROFILE IN ROUTES", req.user);
+    user.logout(req, res)
     req.logout();
     res.json({success: true});
   });
@@ -77,7 +78,8 @@ module.exports = function(app, passport){
 
 // route middleware to make sure a user is logged in
 function isLoggedIn(req, res, next) {
-
+  // console.log(req.isAuthenticated());
+  // console.log(next());
   //if user is authenticated in the session, carry on
   if (req.isAuthenticated())
     return next();
