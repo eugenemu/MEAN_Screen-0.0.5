@@ -36,8 +36,8 @@ routes_setter(app, passport); //load our routes and pass in our app and
                               //fully configured passport.
 
 var options = {
-    key: fs.readFileSync('certs/key.pem'),
-    cert: fs.readFileSync('certs/cert.pem')
+    key: fs.readFileSync('newCerts/key.pem'),
+    cert: fs.readFileSync('newCerts/cert.pem')
 };
 
 var httpsServer = https.createServer(options, app);
